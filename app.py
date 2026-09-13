@@ -43,7 +43,7 @@ st.warning(
 
 with st.expander("What this tool does—and does not do", expanded=False):
     st.write(
-        "It uses deterministic text similarity to suggest the closest evidence for each requirement. "
+        "It uses semantic sentence embeddings to suggest the closest evidence for each requirement. "
         "It does not decide whether you are suitable, rank you against other applicants, rewrite facts, "
         "or guarantee an interview. Every result requires human review."
     )
@@ -85,7 +85,8 @@ if analyse:
     try:
         requirements = extract_requirements(st.session_state.requirements)
         evidence = extract_evidence(st.session_state.evidence)
-        st.session_state.matches = map_evidence(requirements, evidence)
+        with st.spinner("Comparing requirements with your evidence by meaning..."):
+            st.session_state.matches = map_evidence(requirements, evidence)
         if len(requirements) == MAX_REQUIREMENTS:
             st.info(f"Analysed the first {MAX_REQUIREMENTS} requirements.")
         if len(evidence) == MAX_EVIDENCE_ITEMS:
@@ -105,15 +106,15 @@ if matches:
     d.metric("Gaps to review", counts["Gap to review"])
 
     st.info(
-        "Similarity is a transparent text signal, not a suitability score. A low result may mean "
-        "your evidence uses different wording. Check every row yourself."
+        "Semantic similarity compares meaning, not just identical words. It is still a suggestion—not a "
+        "suitability score. Check every row yourself before using the evidence."
     )
     rows = [match.to_dict() for match in matches]
     frame = pd.DataFrame(rows).rename(
         columns={
             "requirement": "Requirement",
             "evidence": "Closest evidence",
-            "similarity": "Text similarity",
+            "similarity": "Semantic similarity",
             "status": "Suggested status",
             "explanation": "Why it matched",
         }
@@ -123,9 +124,9 @@ if matches:
         frame,
         hide_index=True,
         width="stretch",
-        disabled=["Requirement", "Closest evidence", "Text similarity", "Suggested status", "Why it matched"],
+        disabled=["Requirement", "Closest evidence", "Semantic similarity", "Suggested status", "Why it matched"],
         column_config={
-            "Text similarity": st.column_config.ProgressColumn(min_value=0.0, max_value=1.0, format="%.2f"),
+            "Semantic similarity": st.column_config.ProgressColumn(min_value=0.0, max_value=1.0, format="%.2f"),
             "Human decision": st.column_config.SelectboxColumn(options=["Review", "Accept", "Replace evidence", "Not applicable"]),
         },
     )
@@ -153,4 +154,4 @@ if matches:
     st.write("3. Treat genuine gaps as a learning plan—not an invitation to exaggerate.")
     st.write("4. Ask a person who understands the role to review the final evidence.")
 
-st.caption("Job Evidence Mapper · Local deterministic matching · No paid AI API")
+st.caption("Job Evidence Mapper · Semantic matching · No paid AI API · Human review required")
