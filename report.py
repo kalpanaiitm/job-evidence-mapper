@@ -41,6 +41,7 @@ def to_markdown(matches: list[Match]) -> str:
             f"### {index}. {item.requirement}",
             f"- Status: {item.status}",
             f"- Closest evidence: {item.evidence}",
+            f"- Semantic similarity: {item.similarity}",
             f"- Why it matched: {item.explanation}",
             "- Human check: Confirm this example is truthful, specific and relevant.",
             "",
@@ -64,18 +65,19 @@ def reviewed_to_markdown(rows: Sequence[Mapping[str, object]]) -> str:
     lines = [
         "# Job Evidence Review",
         "",
-        "> This is a heuristic preparation aid, not a hiring decision or guarantee.",
+        "> This is a semantic matching preparation aid, not a hiring decision or guarantee.",
         "",
         "## Evidence map",
         "",
     ]
     for index, row in enumerate(rows, start=1):
+        similarity = row.get("Semantic similarity", row.get("Text similarity", "N/A"))
         lines += [
             f"### {index}. {row['Requirement']}",
             f"- Suggested status: {row['Suggested status']}",
             f"- Human decision: {row['Human decision']}",
             f"- Closest evidence: {row['Closest evidence']}",
-            f"- Text similarity: {row['Text similarity']}",
+            f"- Semantic similarity: {similarity}",
             f"- Why it matched: {row['Why it matched']}",
             "",
         ]
