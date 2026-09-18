@@ -1,28 +1,44 @@
 # Job Evidence Mapper
 
-Job Evidence Mapper helps job seekers compare role requirements with their own truthful, anonymised evidence. It produces an explainable preparation map rather than an opaque “job fit” score.
+A privacy-aware Streamlit application that maps job requirements to a candidate's truthful evidence and makes gaps explicit—without inventing experience or hiding the reasoning behind a score.
 
-## Why this project exists
+## The problem
 
-Generic resume tools often optimise keywords or return an unexplained percentage. This app keeps the human in control: each requirement is paired with the closest user-provided example, shared terms are displayed, gaps remain visible, and the tool never invents experience.
+Generic résumé tools often optimise keywords or return an unexplained match percentage. Career changers need something more useful: a requirement-by-requirement preparation map showing what evidence exists, what might be relevant and what still needs work.
 
-## MVP features
+## What the application does
 
-- Paste up to 30 job requirements and 40 evidence examples.
-- Deterministic TF-IDF and cosine-similarity matching.
-- Supported, possible-evidence and gap-to-review labels.
-- Explanation for every suggested match.
-- Manual review field in the interface.
-- CSV and Markdown downloads.
-- Human review decisions are preserved in both downloads.
-- Fictional sample data and regression tests.
-- No account, database or paid API key.
+- accepts up to 30 job requirements and 40 evidence examples
+- matches requirements to evidence with TF-IDF and cosine similarity
+- labels results as **supported**, **possible evidence** or **gap to review**
+- shows shared terms and an explanation for every suggested match
+- preserves human review decisions
+- exports results as CSV and Markdown
+- includes fictional sample data and regression tests
+- requires no account, database or paid API key
+
+## How it works
+
+```text
+Job requirements ─┐
+                  ├─ validation → TF-IDF vectors → cosine similarity
+User evidence ────┘                                  ↓
+                         explainable match → human review → CSV/Markdown
+```
+
+The system deliberately uses an inspectable deterministic baseline. Similarity is treated as a decision-support signal, never as proof of competence or suitability.
+
+## Tech stack
+
+Python · Streamlit · scikit-learn · pandas · pytest · GitHub Actions
 
 ## Run locally
 
 ```bash
+git clone https://github.com/kalpanaiitm/job-evidence-mapper.git
+cd job-evidence-mapper
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 streamlit run app.py
 ```
@@ -33,32 +49,30 @@ streamlit run app.py
 pytest -q
 ```
 
-## Deploy on Streamlit Community Cloud
+## Design decisions
 
-1. Fork or upload this repository to GitHub.
-2. In Streamlit Community Cloud, choose **Create app**.
-3. Select the repository, the `main` branch, and `app.py` as the entry point.
-4. Deploy. No secrets or API keys are required.
+- **Explainability:** every proposed match exposes its supporting terms.
+- **Privacy:** inputs are not intentionally persisted by the application.
+- **Human control:** users can review and correct every match.
+- **Truthfulness:** gaps remain visible; the tool never manufactures experience.
+- **Evaluation before complexity:** a measurable lexical baseline comes before adding an LLM or semantic model.
 
-## Skills demonstrated
+## Limitations
 
-Python · Streamlit · scikit-learn · explainable matching · input validation · privacy-aware design · pytest · CSV/Markdown export
+- wording differences can reduce TF-IDF similarity even when evidence is relevant
+- a high similarity score does not establish competence
+- the tool does not rank candidates or make hiring decisions
+- hosting providers may retain operational metadata
 
-## Privacy and limitations
-
-- Use anonymised, non-sensitive inputs only.
-- The app does not intentionally persist submitted text. A hosting platform may still create operational metadata.
-- Similarity is a heuristic text signal, not proof of competence or suitability.
-- The app does not make hiring decisions, rank candidates or guarantee outcomes.
-- Every match must be reviewed and corrected by the user.
-
-## Technical design
-
-The matcher splits newline-delimited requirements and evidence, creates word and bigram TF-IDF vectors, calculates cosine similarity, and proposes the closest evidence item for each requirement. Status thresholds are deliberately inspectable and covered by regression tests.
+Use anonymised, non-sensitive inputs and review every output.
 
 ## Next iteration
 
-- Improve requirement extraction from long-form job adverts.
-- Let users add a short STAR evidence structure.
-- Add a local semantic model only after measuring whether it improves matches.
-- Conduct usability testing with job seekers and career changers.
+- extract requirements from long-form job adverts
+- add optional STAR evidence fields
+- measure a local semantic model against the current baseline
+- add usability testing with career changers
+
+## About the builder
+
+Created by Dr Kalpana Govindarasan, a scientist and educator transitioning into applied AI. The project reflects a focus on explainable systems, responsible use and practical tools for real users.
