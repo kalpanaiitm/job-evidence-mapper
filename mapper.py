@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import asdict, dataclass
 from typing import Iterable
+from functools import lru_cache
 
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -41,7 +42,7 @@ def parse_items(text: str, limit: int) -> list[str]:
     for raw in text.splitlines():
         item = _normalise_line(raw)
         key = item.casefold()
-        if len(item) >= 3 and key not in seen:
+        if item and any(c.isalnum() for c in item) and key not in seen:
             items.append(item)
             seen.add(key)
         if len(items) >= limit:
@@ -103,6 +104,7 @@ def _status(score: float, shared: Iterable[str]) -> str:
     return "Gap to review"
 
 
+@lru_cache(maxsize=1)
 def _model() -> SentenceTransformer:
     """Load the compact semantic model. The host may cache it between runs."""
     return SentenceTransformer(MODEL_NAME)

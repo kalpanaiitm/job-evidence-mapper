@@ -21,16 +21,21 @@ Published documented projects in GitHub repositories with clear README files
 Explained science concepts to pupils and collaborated with teachers and parents"""
 
 
+def invalidate_results() -> None:
+    st.session_state.pop("matches", None)
+    st.session_state.pop("review_editor", None)
+
+
 def load_sample() -> None:
     st.session_state.requirements = SAMPLE_REQUIREMENTS
     st.session_state.evidence = SAMPLE_EVIDENCE
-    st.session_state.pop("matches", None)
+    invalidate_results()
 
 
 def clear_inputs() -> None:
     st.session_state.requirements = ""
     st.session_state.evidence = ""
-    st.session_state.pop("matches", None)
+    invalidate_results()
 
 st.title("Job Evidence Mapper")
 st.caption("Turn a job advert and your real experience into a transparent evidence map.")
@@ -61,6 +66,7 @@ with left:
         height=290,
         max_chars=MAX_INPUT_CHARS,
         key="requirements",
+        on_change=invalidate_results,
         placeholder="Example: Build reliable Python applications",
     )
 with right:
@@ -70,6 +76,7 @@ with right:
         height=290,
         max_chars=MAX_INPUT_CHARS,
         key="evidence",
+        on_change=invalidate_results,
         placeholder="Example: Built and deployed a Python Streamlit app with tests",
     )
 
@@ -82,6 +89,7 @@ with analyse_col:
     analyse = st.button("Map my evidence", type="primary", width="stretch")
 
 if analyse:
+    invalidate_results()
     try:
         requirements = extract_requirements(st.session_state.requirements)
         evidence = extract_evidence(st.session_state.evidence)
@@ -93,6 +101,8 @@ if analyse:
             st.info(f"Analysed the first {MAX_EVIDENCE_ITEMS} evidence examples.")
     except ValueError as exc:
         st.error(str(exc))
+    except Exception:
+        st.error("The matching model could not load or run. First use requires a model download. Check the host connection and available memory, then retry. No new results were produced.")
 
 matches = st.session_state.get("matches")
 if matches:
@@ -122,6 +132,7 @@ if matches:
     frame["Human decision"] = "Review"
     edited = st.data_editor(
         frame,
+        key="review_editor",
         hide_index=True,
         width="stretch",
         disabled=["Requirement", "Closest evidence", "Semantic similarity", "Suggested status", "Why it matched"],

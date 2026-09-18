@@ -9,7 +9,7 @@ Generic résumé tools often optimise keywords or return an unexplained match pe
 ## What the application does
 
 - accepts up to 30 job requirements and 40 evidence examples
-- matches requirements to evidence with TF-IDF and cosine similarity
+- matches requirements to evidence with sentence-transformer embeddings and cosine similarity
 - labels results as **supported**, **possible evidence** or **gap to review**
 - shows shared terms and an explanation for every suggested match
 - preserves human review decisions
@@ -21,16 +21,16 @@ Generic résumé tools often optimise keywords or return an unexplained match pe
 
 ```text
 Job requirements ─┐
-                  ├─ validation → TF-IDF vectors → cosine similarity
+                  ├─ validation → sentence embeddings → cosine similarity
 User evidence ────┘                                  ↓
                          explainable match → human review → CSV/Markdown
 ```
 
-The system deliberately uses an inspectable deterministic baseline. Similarity is treated as a decision-support signal, never as proof of competence or suitability.
+The system uses the pretrained `all-MiniLM-L6-v2` sentence-transformer model locally on the application host. The model is cached in memory after a successful load. First use may download model files; submitted text is encoded on the host, not sent to a paid AI API. Similarity is treated as a decision-support signal, never as proof of competence or suitability.
 
 ## Tech stack
 
-Python · Streamlit · scikit-learn · pandas · pytest · GitHub Actions
+Python · Streamlit · sentence-transformers · scikit-learn · pandas · pytest · GitHub Actions
 
 ## Run locally
 
@@ -51,16 +51,16 @@ pytest -q
 
 ## Design decisions
 
-- **Explainability:** every proposed match exposes its supporting terms.
+- **Inspection:** each match shows its similarity score and any shared terms. Shared terms are not a faithful explanation of the embedding model's reasoning.
 - **Privacy:** inputs are not intentionally persisted by the application.
 - **Human control:** users can review and correct every match.
 - **Truthfulness:** gaps remain visible; the tool never manufactures experience.
-- **Evaluation before complexity:** a measurable lexical baseline comes before adding an LLM or semantic model.
+- **Evaluation:** regression tests cover basic matching, parsing, exports, model reuse and UI result invalidation. They are not a benchmark of matching accuracy.
 
 ## Limitations
 
-- wording differences can reduce TF-IDF similarity even when evidence is relevant
-- a high similarity score does not establish competence
+- semantic similarity can miss negation, differences in seniority and incomplete or exaggerated evidence
+- thresholds are heuristic and not calibrated probabilities; a high similarity score does not establish competence
 - the tool does not rank candidates or make hiring decisions
 - hosting providers may retain operational metadata
 
@@ -70,9 +70,10 @@ Use anonymised, non-sensitive inputs and review every output.
 
 - extract requirements from long-form job adverts
 - add optional STAR evidence fields
-- measure a local semantic model against the current baseline
+- build a labelled evaluation set including paraphrases, negation and misleading overlap; compare the semantic model with a TF-IDF baseline
 - add usability testing with career changers
 
 ## About the builder
 
 Created by Dr Kalpana Govindarasan, a scientist and educator transitioning into applied AI. The project reflects a focus on explainable systems, responsible use and practical tools for real users.
+

@@ -57,3 +57,58 @@ def test_reviewed_exports_preserve_human_decision():
     }]
     assert "Accept" in reviewed_to_csv(rows)
     assert "Human decision: Accept" in reviewed_to_markdown(rows)
+
+def test_short_skills_are_preserved():
+    assert extract_requirements("R\nC#\nGo\nSQL\nR\n---") == ["R", "C#", "Go", "SQL"]
+
+
+def test_input_limits_and_empty_evidence():
+    from mapper import MAX_INPUT_CHARS, MAX_REQUIREMENTS
+    with pytest.raises(ValueError):
+        extract_requirements("x" * (MAX_INPUT_CHARS + 1))
+    assert len(extract_requirements("\n".join(f"Skill {i}" for i in range(40)))) == MAX_REQUIREMENTS
+    with pytest.raises(ValueError):
+        map_evidence(["Python"], [])
+
+
+def test_model_is_reused(monkeypatch):
+    import mapper
+    calls = []
+    sentinel = object()
+    def factory(name):
+        calls.append(name)
+        return sentinel
+    mapper._model.cache_clear()
+    monkeypatch.setattr(mapper, "SentenceTransformer", factory)
+    try:
+        assert mapper._model() is mapper._model() is sentinel
+        assert len(calls) == 1
+    finally:
+        mapper._model.cache_clear()
+
+
+def test_failed_model_load_can_be_retried(monkeypatch):
+    import mapper
+    calls = []
+    def factory(name):
+        calls.append(name)
+        if len(calls) == 1:
+            raise OSError("offline")
+        return object()
+    mapper._model.cache_clear()
+    monkeypatch.setattr(mapper, "SentenceTransformer", factory)
+    try:
+        with pytest.raises(OSError):
+            mapper._model()
+        assert mapper._model() is not None
+        assert len(calls) == 2
+    finally:
+        mapper._model.cache_clear()
+
+
+def test_semantic_column_is_exported():
+    rows = [{"Requirement": "R", "Closest evidence": "Used R",
+             "Semantic similarity": 0.75, "Suggested status": "Supported",
+             "Why it matched": "Review manually", "Human decision": "Accept"}]
+    assert "Semantic similarity: 0.75" in reviewed_to_markdown(rows)
+
