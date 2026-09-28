@@ -77,3 +77,7 @@ Use anonymised, non-sensitive inputs and review every output.
 
 Created by Dr Kalpana Govindarasan, a scientist and educator transitioning into applied AI. The project reflects a focus on explainable systems, responsible use and practical tools for real users.
 
+
+## Engineering evidence
+
+See [project blueprint](PROJECT_BLUEPRINT.md), [architecture](ARCHITECTURE.md), [test report](TEST_REPORT.md) and [changelog](CHANGELOG.md) for implemented scope, verification and next milestones. These documents follow the human-controlled App Development Playbook; planned features are not represented as implemented.
